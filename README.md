@@ -20,9 +20,17 @@ Before running this project, ensure you have the following installed:
 - [Docker Compose](https://docs.docker.com/compose/install/)
 - [Git](https://git-scm.com/)
 
+## Clone the repository
+
+To clone the repo on your computer:
+
+```git clone https://github.com/nicoboga4075/MonitoringTool.git
+   cd MonitoringTool
+```
+
 ## Build and Run with Docker
 
-To use the Dockerfile alone 
+To use the Dockerfile **alone**
 
 - Build the Docker image :
 
@@ -66,3 +74,10 @@ FastAPI provides automatic interactive API documentation. You can access it by v
 ## Possible Improvements
 
 These improvements could make the FastAPI project more robust, efficient and maintainable: enable dynamic management of endpoints from files (CSV or TXT), customizing Uvicorn logs, exporting CSV history, using **SQLAlchemy** for persistent storage, leveraging FastAPI’s native async capabilities and handling session tokens through dependency injection. I could add also **Doctest** in docker-compose file and implement it in the code or use **Robot Framework** to simulate main actions in browser or other Python test frameworks (**Pytest**, **Unittest**). Finally, i could have integrated **Sonar Cloud** or **Codacy** to my project so as to make a deeper audit for my code.
+
+Other improvements:
+- Add the date for last 10 status
+- Removal confirmation
+- Add PUT for edit the endpoint (CRUD)
+- Delete duplicates for name
+...

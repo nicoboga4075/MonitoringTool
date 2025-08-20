@@ -8,6 +8,6 @@ class EndpointInfo(BaseModel):
     url: str
     method: str = Field(default="GET", pattern="^(GET|POST)$")
     expected_status: int = Field(default=200, ge=100, le=599)
-    last_check : str = Field(..., pattern=r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
-    last_status: int = Field(..., ge=100, le=599)
-    is_healthy: bool = Field(default=False)
+    last_check : str | None = Field(default=None, pattern=r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
+    last_status: int | None = Field(default=None, ge=100, le=599)
+    is_healthy: bool | None = Field(default=None)

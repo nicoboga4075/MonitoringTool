@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="results-container">
-    <button id="back-btn">
-        <i class="fas fa-plus"></i>&nbsp;&nbsp;Add
+<div id="results-container">
+    <button id="back-btn" onclick="addEndpoint()">
+        <i class="fas fa-plus"></i>
     </button>
     <div class="overflow-list">
         {% if results and results|length > 0 %}
@@ -19,16 +19,26 @@
                 {% for result in results %}
                 <tr>
                     {% for value in result.dict().values() %}
+                    {% if value is boolean %}
+                    <td>
+                        {% if value %}
+                        <button class="ok">OK</button>
+                        {% else %}
+                        <button class="ko">KO</button>
+                        {% endif %}
+                    </td>
+                    {% else %}
                     <td>{{ value }}</td>
+                    {% endif %}
                     {% endfor %}
                     <td style="text-align:center">
-                        <button id="back-btn" title="Check">
+                        <button id="back-btn" title="Check" onclick="handleCheck('{{ result.id }}')">
                             <i class="fas fa-refresh"></i>
                         </button>
-                        <button id="back-btn" title="Delete">
+                        <button id="back-btn" title="Delete" onclick="handleDelete('{{ result.id }}')">
                             <i class="fas fa-trash"></i>
                         </button>
-                        <button id="back-btn" title="History">
+                        <button id="back-btn" title="History" onclick="handleHistory('{{ result.id }}')">
                             <i class="fas fa-eye"></i>
                         </button>
                     </td>
@@ -41,4 +51,17 @@
         {% endif %}
     </div>
 </div>
+<form action="/api/endpoints" method="post" id="form-container" style="display:none">
+    <input type="text" name="name" placeholder="Name" required>
+    <br>
+    <input type="url" name="url" placeholder="URL" required>
+    <br>
+    <select name="method" required>
+        <option value="GET">GET</option>
+        <option value="POST">POST</option>
+    </select>
+    <br>
+    <input type="number" name="expected_status" value="200" min="100" max="599">
+    <button type="submit" id="submit-btn">Add</button>
+</form>
 {% endblock %}

@@ -2,8 +2,11 @@
 
 import json
 import logging
+import requests
+from datetime import datetime
 from time import time
-from fastapi import FastAPI, Request, status
+from uuid import uuid4
+from fastapi import FastAPI, Request, HTTPException, Form, status
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -43,12 +46,13 @@ async def dispatch(request: Request, call_next):
     start_time = time()
     response = await call_next(request)
     process_time = time() - start_time
+    request.state.process_time = process_time
     log_msg = (
         f"{request.method} {request.url.path} - "
         f"Status: {response.status_code} - "
         f"Process time: {process_time:.3f}s"
     )
-    if response.status_code == 200:
+    if response.status_code in [200, 201, 204, 301, 302, 303, 304]:
         logger.info(log_msg)
     else:
         logger.error(log_msg)
@@ -81,13 +85,15 @@ def index(request: Request):
 endpoints = [{
 "id": "uuid",
 "name": "API Production",
-"url": "https://api.example.com/health",
+"url": "https://jsonplaceholder.typicode.com/todos",
 "method": "GET",
 "expected_status": 200,
 "last_check": "2024-01-15T10:30:00Z",
 "last_status": 200,
 "is_healthy": True
 }]
+
+status_endpoints = {"uuid": [True]}
 
 @app.get("/api/endpoints", response_model=list[models.EndpointInfo], status_code=status.HTTP_200_OK,
 description = "Get all endpoints", tags = ["Endpoints"])
@@ -102,12 +108,24 @@ def get_endpoints(request: Request):
 
 @app.post("/api/endpoints", status_code=status.HTTP_201_CREATED,
 description = "Add a new endpoint", tags = ["Endpoints"])
-def add_endpoint(request: Request, endpoint: models.EndpointInfo):
-    """ Adds a new endpoint to be monitored.
-    This endpoint allows the user to add a new endpoint by providing its details.
-    The endpoint will be monitored for availability and status.
-    """
-    pass
+def add_endpoint(request: Request, name = Form(...), url = Form(...), method = Form("GET"), expected_status = Form(200)):
+    try:
+        id_endpoint = str(uuid4())
+        endpoint = models.EndpointInfo(
+            id= id_endpoint,
+            name=name,
+            url=url,
+            method=method,
+            expected_status=expected_status
+        )
+        endpoints.append({"id": id_endpoint, **endpoint.dict()})
+        status_endpoints[id_endpoint] = []
+    except Exception as e:
+        logger.error(f"Error while creating endpoint: {e}")
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"error": str(e)})
+    if "text/html" in request.headers.get("accept", ""):
+        return RedirectResponse("/api/endpoints", status_code=status.HTTP_301_MOVED_PERMANENTLY)
+    return JSONResponse(status_code=status.HTTP_201_CREATED, content={"id": id_endpoint, **endpoint.dict()})
 
 @app.delete("/api/endpoints/{id}", status_code=status.HTTP_204_NO_CONTENT,
 description = "Delete an endpoint", tags = ["Endpoints"])
@@ -129,13 +147,43 @@ def check_endpoint(request: Request, id: str):
     This endpoint allows the user to trigger an immediate check of an endpoint's availability
     and status, returning the updated information.
     """
-    pass
+    start_req = time()
+    try:
+        # Find the endpoint by ID
+        matches = [ep for ep in endpoints if ep["id"] == id]
+        if not matches:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Endpoint with id {id} not found")
+        endpoint = matches[0]
+        response = requests.get(endpoint["url"])
+        status_code = response.status_code
+        status_endpoint = status_code == endpoint["expected_status"]
+        # Update the status of the endpoint
+        endpoints[endpoints.index(endpoint)]["is_healthy"] = status_endpoint
+        endpoints[endpoints.index(endpoint)]["last_status"] = status_code
+        endpoints[endpoints.index(endpoint)]["last_check"] = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+        status_endpoints[endpoint["id"]].append(status_endpoint)
+        # Response time calculation
+        response_time = time() - start_req
+        logger.info(f"Checked endpoint {endpoint["url"]}: {status_code} - Healthy: {status_endpoint}")
+        return JSONResponse(status_code=status.HTTP_200_OK, content = {"endpoint":endpoint, "response_time": f"{response_time:.3f}s"})
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"error": f"Error checking endpoint {id}: {str(e)}"}
+        )
 
-@app.get("/api/endpoints/{id}/history", response_model=list[models.EndpointInfo], status_code=status.HTTP_200_OK,
+@app.get("/api/endpoints/{id}/history", status_code=status.HTTP_200_OK,
 description = "Get the last 10 statuses of an endpoint", tags = ["Endpoints"])
 def get_endpoint_history(request: Request, id: str):
     """ Returns the last 10 statuses of an endpoint.
     This endpoint retrieves the last 10 status checks for a specific endpoint,
     providing insight into its availability and performance over time.
     """
-    pass
+    matches = [ep for ep in endpoints if ep["id"] == id]
+    if not matches:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Endpoint with id {id} not found")
+    endpoint = models.EndpointInfo(**matches[0])
+    checks = status_endpoints.get(id,[])[-10:]
+    if "text/html" in request.headers.get("accept", ""):
+        return views.HistoryView().render(request, checks=checks)
+    return checks

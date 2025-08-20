@@ -39,7 +39,7 @@
   <ItemGroup>
     <Content Include="MonitoringTool\static\base.html" />
     <Content Include="MonitoringTool\static\favicon.ico" />
-    <Content Include="MonitoringTool\static\index.html" />
+    <Content Include="MonitoringTool\static\history.html" />
     <Content Include="MonitoringTool\static\main.js" />
     <Content Include="MonitoringTool\static\results.html" />
     <Content Include="MonitoringTool\static\style.css" />

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<div id="history-container">
+    <div class="overflow-list">
+        {% if checks and checks|length > 0 %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Last 10</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for check in checks %}
+                <tr>
+                    <td>
+                        {% if check %}
+                        <button class="ok">OK</button>
+                        {% else %}
+                        <button class="ko">KO</button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No status found.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
