@@ -163,7 +163,6 @@ def check_endpoint(request: Request, id: str):
         status_endpoints[endpoint["id"]].append(status_endpoint)
         # Response time calculation
         response_time = time() - start_req
-        logger.info(f"Checked endpoint {endpoint["url"]}: {status_code} - Healthy: {status_endpoint}")
         return JSONResponse(status_code=status.HTTP_200_OK, content = {"endpoint":endpoint, "response_time": f"{response_time:.3f}s"})
     except Exception as e:
         return JSONResponse(
