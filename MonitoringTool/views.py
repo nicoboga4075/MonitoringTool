@@ -32,4 +32,3 @@ class HistoryView(BaseView):
     """ View for displaying history of an endpoint """
     def render(self, request: Request, **response):
         return super().render(request, {"checks" : response.get('checks',[])})
-    

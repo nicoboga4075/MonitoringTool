@@ -24,8 +24,9 @@ Before running this project, ensure you have the following installed:
 
 To clone the repo on your computer:
 
-```git clone https://github.com/nicoboga4075/MonitoringTool.git
-   cd MonitoringTool
+```
+git clone https://github.com/nicoboga4075/MonitoringTool.git
+cd MonitoringTool
 ```
 
 ## Build and Run with Docker
@@ -80,4 +81,4 @@ Other improvements:
 - Removal confirmation
 - Add PUT for edit the endpoint (CRUD)
 - Delete duplicates for name
-...
+- ...

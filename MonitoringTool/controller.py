@@ -1,13 +1,12 @@
 """ Controller for the app using FastAPI. """
 
-import json
 import logging
-import requests
 from datetime import datetime
 from time import time
 from uuid import uuid4
+import requests
 from fastapi import FastAPI, Request, HTTPException, Form, status
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
@@ -79,7 +78,7 @@ def startup_event():
     logger.info("Mounted static files.")
 
 @app.get("/", include_in_schema = False)
-def index(request: Request):
+def index():
     return RedirectResponse(url="/api/endpoints", status_code = status.HTTP_301_MOVED_PERMANENTLY)
 
 endpoints = [{
@@ -154,7 +153,7 @@ def check_endpoint(request: Request, id: str):
         if not matches:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Endpoint with id {id} not found")
         endpoint = matches[0]
-        response = requests.get(endpoint["url"])
+        response = requests.request(method=endpoint["method"], url=endpoint["url"])
         status_code = response.status_code
         status_endpoint = status_code == endpoint["expected_status"]
         # Update the status of the endpoint
@@ -172,17 +171,13 @@ def check_endpoint(request: Request, id: str):
             content={"error": f"Error checking endpoint {id}: {str(e)}"}
         )
 
-@app.get("/api/endpoints/{id}/history", status_code=status.HTTP_200_OK,
+@app.get("/api/endpoints/{id}/history", response_model=list[bool], status_code=status.HTTP_200_OK,
 description = "Get the last 10 statuses of an endpoint", tags = ["Endpoints"])
 def get_endpoint_history(request: Request, id: str):
     """ Returns the last 10 statuses of an endpoint.
     This endpoint retrieves the last 10 status checks for a specific endpoint,
     providing insight into its availability and performance over time.
     """
-    matches = [ep for ep in endpoints if ep["id"] == id]
-    if not matches:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Endpoint with id {id} not found")
-    endpoint = models.EndpointInfo(**matches[0])
     checks = status_endpoints.get(id,[])[-10:]
     if "text/html" in request.headers.get("accept", ""):
         return views.HistoryView().render(request, checks=checks)
