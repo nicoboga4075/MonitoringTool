@@ -17,7 +17,6 @@ I use Python 3.12 in Visual Studio and Pylint workflow to check clean code requi
 Before running this project, ensure you have the following installed:
 
 - [Docker](https://docs.docker.com/get-docker/)
-- [Docker Compose](https://docs.docker.com/compose/install/)
 - [Git](https://git-scm.com/)
 
 ## Clone the repository
@@ -29,9 +28,9 @@ git clone https://github.com/nicoboga4075/MonitoringTool.git
 cd MonitoringTool
 ```
 
-## Build and Run with Docker
+## Deploy with Docker
 
-To use the Dockerfile **alone**
+To use the Dockerfile
 
 - Build the Docker image :
 
@@ -43,17 +42,9 @@ docker build -t anssi-monitoring-tool:1.0 .
 ```
 docker run -p 8000:8000 --name my-container anssi-monitoring-tool:1.0
 ```
-
-## Deploy with Docker Compose
-
-To deploy with Docker Compose upon Dockerfile
-
-```
-docker-compose up --build
-```
 The FastAPI application will be running on http://localhost:8000.
 
-To access the API from a different machine on the network, use the machine's IP address instead of localhost (e.g., http://<your-ip>:8000).
+Make sure the port 8000 is free before using Docker.
 
 ## Project Structure
 

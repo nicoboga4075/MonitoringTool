@@ -9,4 +9,4 @@ import uvicorn
 from MonitoringTool.controller import app # Gets FastAPI object from the controller
 
 if __name__ == "__main__":
-    uvicorn.run(app, host = "localhost", port = 8000)
+    uvicorn.run(app, host = "0.0.0.0", port = 8000)
